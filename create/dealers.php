@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_FILES['banner_img']) && $_FILES['banner_img']['error'] === 0) {
         $file = rand(1000, 100000) . "-" . basename($_FILES['banner_img']['name']);
         $file_loc = $_FILES['banner_img']['tmp_name'];
-        move_uploaded_file($file_loc, "../uploads/" . $file);
+        move_uploaded_file($file_loc, "../../PumaBridgeFiles/uploads/" . $file);
     }
 
     // Logo Upload
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_FILES['logo_img']) && $_FILES['logo_img']['error'] === 0) {
         $file1 = rand(1000, 100000) . "-" . basename($_FILES['logo_img']['name']);
         $file_loc1 = $_FILES['logo_img']['tmp_name'];
-        move_uploaded_file($file_loc1, "../uploads/" . $file1);
+        move_uploaded_file($file_loc1, "../../PumaBridgeFiles/uploads/" . $file1);
     }
 
     $tdate = date('Y-m-d H:i:s');

@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_FILES['banner_img']['name'] !== "") {
         $file = rand(1000, 100000) . "-" . $_FILES['banner_img']['name'];
         $file_loc = $_FILES['banner_img']['tmp_name'];
-        $folder = "../uploads/";
+        $folder = "../../PumaBridgeFiles/uploads/";
         if (move_uploaded_file($file_loc, $folder . $file)) {
             $new_data['banner'] = $file;
         }
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($_FILES['logo_img']['name'] !== "") {
         $file1 = rand(1000, 100000) . "-" . $_FILES['logo_img']['name'];
         $file_loc1 = $_FILES['logo_img']['tmp_name'];
-        $folder1 = "../uploads/";
+        $folder1 = "../../PumaBridgeFiles/uploads/";
         if (move_uploaded_file($file_loc1, $folder1 . $file1)) {
             $new_data['logo'] = $file1;
         }
