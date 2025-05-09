@@ -1,36 +1,34 @@
 <?php
-//fetch.php  
 include("../config.php");
+session_start();
+if (isset($_POST)) {
 
 
-$access_key = '03201232927';
+   $row_id=$_POST['row_id'];
+   $name=$_POST['name'];
+    
+    // echo 'HAmza';
 
-$pass = $_GET["key"];
-$id=$_GET['id'];
-if ($pass != '') {
-    if ($pass == $access_key) {
-        $id = $_GET['id'];
 
-        $sql = "DELETE FROM `containers_sizes` WHERE id='$id'";
 
-        // echo $sql;
+    $query = "UPDATE `department
+    ` SET `sizes`='$name' WHERE id='$row_id';";
 
-        if(mysqli_query($db, $sql)){
-            logSystemActivity($db, $user_id, $stat,'Delete Container', 'containers_sizes', $id);
-        }
-        else{
-            echo 'Error' . mysqli_error($db) . '<br>' . $query;
-        }
-      
 
+    if (mysqli_query($db, $query)) {
+        logSystemActivity($db, $user_id, 'Edit', 'department', $row_id);
+
+        $output= 1;
     } else {
-        echo 'Wrong Key...';
+        $output = 'Error' . mysqli_error($db) . '<br>' . $query;
+
     }
 
-} else {
-    echo 'Key is Required';
-}
-function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+
+
+
+    echo $output;
+}function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
 {
     $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
                                      VALUES (?, NOW(), ?, ?, ?, ?, ?)");
@@ -51,5 +49,4 @@ function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old
         echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
-
 ?>

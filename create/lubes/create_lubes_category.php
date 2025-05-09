@@ -23,7 +23,8 @@ if (isset($_POST)) {
 
 
         if (mysqli_query($db, $query)) {
-
+            $inserted_id = mysqli_insert_id($db);
+            logSystemActivity($db, $user_id, 'Created', 'lubes_product_category', $inserted_id);
 
             $output = 1;
 
@@ -36,5 +37,25 @@ if (isset($_POST)) {
 
 
     echo $output;
+}function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+{
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                     VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ississ",
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
+    }
 }
 ?>

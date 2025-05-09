@@ -11,12 +11,12 @@ if ($pass != '') {
     if ($pass == $access_key) {
         $id = $_GET['id'];
 
-        $sql = "DELETE FROM `containers_sizes` WHERE id='$id'";
+        $sql = "DELETE FROM `department` WHERE id='$id'";
 
         // echo $sql;
 
         if(mysqli_query($db, $sql)){
-            logSystemActivity($db, $user_id, $stat,'Delete Container', 'containers_sizes', $id);
+            logSystemActivity($db, $user_id, 'Deleted', 'department', $id);
         }
         else{
             echo 'Error' . mysqli_error($db) . '<br>' . $query;
@@ -51,5 +51,4 @@ function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old
         echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
-
 ?>

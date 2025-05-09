@@ -1,7 +1,27 @@
 <?php
 include("../config.php");
 session_start();
-if (isset($_POST)) {
+
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '') {
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                 VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "isssss", 
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user_id = $_POST['user_id'];
     $datetime = date('Y-m-d H:i:s');
     $dealer_name = $_POST["dealer_name"];
@@ -14,7 +34,7 @@ if (isset($_POST)) {
     $type = $_POST["type"];
     $dealer_sap_no = $_POST['dealer_sap_no'];
     $account_balanced = $_POST["account_balanced"];
-    $carss = $_POST['depots'];
+    $carss = $_POST['depots'] ?? null;
     $district = $_POST['district'];
     $city = $_POST['city'];
     $province = $_POST['province'];
@@ -24,129 +44,61 @@ if (isset($_POST)) {
     $tm = $_POST['tm'];
     $asm = $_POST['asm'];
 
-    $file = rand(1000, 100000) . "-" . $_FILES['banner_img']['name'];
-    $file_loc = $_FILES['banner_img']['tmp_name'];
-    $file_size = $_FILES['banner_img']['size'];
-    //  $file_type = $_FILES['file']['type'];
-    $folder = "../../PumaBridgeFiles/uploads/";
-    move_uploaded_file($file_loc, $folder . $file);
+    // Banner Upload
+    $file = '';
+    if (isset($_FILES['banner_img']) && $_FILES['banner_img']['error'] === 0) {
+        $file = rand(1000, 100000) . "-" . basename($_FILES['banner_img']['name']);
+        $file_loc = $_FILES['banner_img']['tmp_name'];
+        move_uploaded_file($file_loc, "../uploads/" . $file);
+    }
 
-    $file1 = rand(1000, 100000) . "-" . $_FILES['logo_img']['name'];
-    $file_loc1 = $_FILES['logo_img']['tmp_name'];
-    $file_size1 = $_FILES['logo_img']['size'];
-    //  $file_type = $_FILES['file']['type'];
-    $folder1 = "../../PumaBridgeFiles/uploads/";
-    move_uploaded_file($file_loc1, $folder1 . $file1);
+    // Logo Upload
+    $file1 = '';
+    if (isset($_FILES['logo_img']) && $_FILES['logo_img']['error'] === 0) {
+        $file1 = rand(1000, 100000) . "-" . basename($_FILES['logo_img']['name']);
+        $file_loc1 = $_FILES['logo_img']['tmp_name'];
+        move_uploaded_file($file_loc1, "../uploads/" . $file1);
+    }
 
     $tdate = date('Y-m-d H:i:s');
-    $num = mt_rand(100000, 999999);
 
-
-    if ($_POST["row_id"] != '') {
-        // echo 'HAmza';
-
-
+    if (!empty($_POST["row_id"])) {
+        // Update logic can go here (not implemented)
+        echo "Update not handled yet.";
     } else {
-
-
-
         $query_main = "INSERT INTO `dealers`
-            (`name`,
-            `contact`,
-            `email`,
-            `password`,
-            `location`,
-            `co-ordinates`,
-            `housekeeping`,
-            `no_lorries`,
-            `sap_no`,
-            `type`,
-            `zm`,
-            `tm`,
-            `asm`,
-            `district`,
-            `city`,
-            `region`,
-            `province`,
-            `banner`,
-            `logo`,
-            `acount`,
-            `created_at`,
-            `created_by`)
+            (`name`, `contact`, `email`, `password`, `location`, `co-ordinates`, `housekeeping`, `no_lorries`, `sap_no`, `type`, `zm`, `tm`, `asm`, `district`, `city`, `region`, `province`, `banner`, `logo`, `acount`, `created_at`, `created_by`)
             VALUES
-            ('$dealer_name',
-            '$call_no',
-            '$emails',
-            '$password',
-            '$location',
-            '$lati',
-            '$housekeeping',
-            '0',
-            '$dealer_sap_no',
-            '$type',
-            '$zm',
-            '$tm',
-            '$asm',
-            '$district',
-            '$city',
-            '$region',
-            '$province',
-            '$file',
-            '$file1',
-            '$account_balanced',
-            '$datetime',
-            '$user_id');";
-
-
+            ('$dealer_name', '$call_no', '$emails', '$password', '$location', '$lati', '$housekeeping', '0', '$dealer_sap_no', '$type', '$zm', '$tm', '$asm', '$district', '$city', '$region', '$province', '$file', '$file1', '$account_balanced', '$datetime', '$user_id')";
 
         if (mysqli_query($db, $query_main)) {
             $active = mysqli_insert_id($db);
-            // $active = $resultlist['id'];
 
-            // $account_balanced = "INSERT INTO `dealer_account`
-            // (`dealer_id`,
-            // `account`,
-            // `created_at`,
-            // `created_by`)
-            // VALUES
-            // ('$active',
-            // '$account_balanced',
-            // '$datetime',
-            // '$user_id');";
-            // mysqli_query($db, $account_balanced);
+            // Initial Ledger Log
+            $log = "INSERT INTO `dealer_ledger_log`
+            (`dealer_id`, `old_ledger`, `new_ledger`, `datetime`, `description`, `doc_no`, `debit_no`, `assignment_no`, `document_type`, `sap_no`, `ledger_balance`, `created_at`, `created_by`)
+            VALUES
+            ('$active', '$account_balanced', '$account_balanced', '$datetime', 'Initial Credit Limit', '', '', '', '', '$dealer_sap_no', '$account_balanced', '$datetime', '$user_id')";
+                    mysqli_query($db, $log) or die("Error creating ledger log: " . mysqli_error($db));
 
+            // System Log
+            logSystemActivity($db, $user_id, 'Created Dealer', 'dealers', $active);
 
-            $start_time = date("Y-m-d H:i:s");
-            foreach ($carss as $assign) {
-                $sql1 = "INSERT INTO `dealers_depots`
-                (`dealers_id`,
-                `depot_id`,
-                `created_at`,
-                `created_by`)
-                VALUES
-                ('$active',
-                '$assign',
-                '$start_time',
-                '$user_id');";
-
-                if (mysqli_query($db, $sql1)) {
-                    $output = 1;
-
+            // Depot Assignments
+            if (is_array($carss)) {
+                foreach ($carss as $assign) {
+                    $sql1 = "INSERT INTO `dealers_depots`
+                        (`dealers_id`, `depot_id`, `created_at`, `created_by`)
+                        VALUES
+                        ('$active', '$assign', '$datetime', '$user_id')";
+                    mysqli_query($db, $sql1);
                 }
             }
 
-
-
-
-
+            echo 1;
         } else {
-            $output = 'Error' . mysqli_error($db) . '<br>' . $query_main;
-
+            echo 'Error: ' . mysqli_error($db) . '<br>' . $query_main;
         }
     }
-
-
-
-    echo $output;
 }
 ?>

@@ -1,24 +1,34 @@
 <?php
+// delete_survey_question.php
 include("../config.php");
-session_start();
-if (isset($_POST)) {
-    // Existing code...
-    $checkboxValue = $_POST['checkboxValue'];
-    $id = $_POST['id'];
-    $user_id = $_SESSION['user_id']; // Ensure session contains user_id
 
-    // Get old status before update
-    $oldResult = mysqli_query($db, "SELECT status FROM `survey_category_questions_eng` WHERE id = '$id'");
-    $oldRow = mysqli_fetch_assoc($oldResult);
-    $oldValue = $oldRow ? $oldRow['status'] : '';
+$access_key = '03201232927';
 
-    $query = "UPDATE `survey_category_questions_eng` SET `status`=$checkboxValue WHERE id='$id'";
-    ;
+$pass = $_GET["key"];
+$id = $_GET['id'];
 
-    mysqli_query($db, $query);
-    logSystemActivity($db, $user_id, 'Updated', 'survey_category_questions_eng', $id,$oldValue, $checkboxValue);
+if ($pass != '') {
+    if ($pass == $access_key) {
+        if (isset($id) && !empty($id)) {
 
-    echo 1;
+            $sql = "DELETE FROM `survey_category_questions` WHERE id='$id'";
+
+            if (mysqli_query($db, $sql)) {
+                logSystemActivity($db, $$_SESSION['user_id'], 'Deleted Questions', 'survey_category_questions', $id);
+            } else {
+                echo 'Error: ' . mysqli_error($db);
+            }
+
+        } else {
+            echo 'ID is Required';
+        }
+
+    } else {
+        echo 'Wrong Key...';
+    }
+
+} else {
+    echo 'Key is Required';
 }
 function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
 {
@@ -41,3 +51,4 @@ function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old
         echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
+?>

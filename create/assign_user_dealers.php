@@ -28,12 +28,36 @@ if (isset($_POST)) {
 
             if (!mysqli_query($db, $query)) {
                 echo 'Error: ' . mysqli_error($db) . '<br>' . $query;
+                
                 exit; // Stop execution if an error occurs
             }
         }
+        logSystemActivity($db, $user_id, 'Eng Created', 'eng_users_dealers', $dealer );
+
         echo 1; // Success
     } else {
         echo 'Error: No dealers provided.';
+    }
+}
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+{
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                 VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ississ",
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
 ?>

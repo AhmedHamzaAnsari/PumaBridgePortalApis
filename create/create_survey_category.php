@@ -24,8 +24,8 @@ if (isset($_POST)) {
 
         if (mysqli_query($db, $query)) {
 
-
-            $output = 1;
+            logSystemActivity($db, $user_id, 'Survey Category', 'survey_category', $user_id);
+            // $output = 1;
 
         } else {
             $output = 'Error' . mysqli_error($db) . '<br>' . $query;
@@ -36,5 +36,26 @@ if (isset($_POST)) {
 
 
     echo $output;
+}
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+{
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                     VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ississ",
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
+    }
 }
 ?>

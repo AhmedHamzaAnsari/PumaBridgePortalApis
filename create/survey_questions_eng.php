@@ -37,20 +37,41 @@ if (isset($_POST)) {
             '$date',
             '$user_id');";
             if (mysqli_query($db, $query_count)) {
-                $output = 1;
+                logSystemActivity($db, $user_id, 'Created', 'survey_category_questions_eng', $category);
 
-            }else {
+            } else {
                 $output = 'Error' . mysqli_error($db) . '<br>' . $query_count;
-    
+
             }
 
         }
 
-        
+
     }
 
 
 
     echo $output;
+}
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+{
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                 VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ississ",
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
+    }
 }
 ?>
