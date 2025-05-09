@@ -7,7 +7,7 @@ if (isset($_POST)) {
     // ini_set('max_input_vars', 3000);
     $user_id = $_POST['user_id'];
     $dealers = $_POST["c_user_id"];
-    $description =  $_POST["description"];
+    $description = $_POST["description"];
 
 
     $userData = count($_POST["dealers_id"]);
@@ -25,7 +25,7 @@ if (isset($_POST)) {
             $dealer_checkbox = $_POST['text_checkbox'][$i];
             // echo $dealer_checkbox;
 
-            if ($dealer_checkbox !='0') {
+            if ($dealer_checkbox != '0') {
                 $inspection_date = $_POST['inspection_date'][$i];
                 $pump_id = $_POST['dealers_id'][$i];
                 // echo $inspection_date.' '.$pump_id;
@@ -50,6 +50,7 @@ if (isset($_POST)) {
 
                 if (mysqli_query($db, $query)) {
 
+                    logSystemActivity($db, $user_id, 'Created', 'eng_inspector_task', $dealers);
 
                     $output = 1;
 
@@ -68,4 +69,27 @@ if (isset($_POST)) {
 
     echo $output;
 }
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
+{
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                 VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param(
+            $stmt,
+            "ississ",
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        echo "Error preparing system log statement: " . mysqli_error($db);
+    }
+}
+
+
 ?>

@@ -16,10 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $sum_of_closing = isset($_POST['sum_of_closing']) ? $_POST['sum_of_closing'] : null;
 
     $nozzel = isset($_POST['nozels_data']) ? $_POST['nozels_data'] : null;
+    $is_totalizer_data = isset($_POST['totalizer_nozels_data']) ? $_POST['totalizer_nozels_data'] : null;
 
     $total_sales = isset($_POST['total_sales']) ? $_POST['total_sales'] : null;
 
-    $total_receipts = isset($_POST['total_receipts']) ? $_POST['total_receipts'] : null;
+    $total_receipts = isset($_POST['final_receipts']) ? $_POST['final_receipts'] : null;
     $in_transit = isset($_POST['in_transit']) ? $_POST['in_transit'] : null;
     $final_receipts = isset($_POST['final_receipts']) ? $_POST['final_receipts'] : null;
 
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $date = date('Y-m-d H:i:s');
 
     // Function to handle totalizer data
-    function new_totalizer($is_totalizer_data, $db, $dealer_id, $date, $user_id, $last_date, $task_id, $recon_id)
+    function new_totalizer($is_totalizer_data, $db, $dealer_id, $date, $user_id, $task_id, $recon_id)
     {
         $dataArray = json_decode($is_totalizer_data, true);
 
@@ -58,10 +59,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     WHERE `id` = '$id';";
 
                     if (!mysqli_query($db, $update_dips)) {
-                        return 'Error: ' . mysqli_error($db);
+                        die("Error: " . mysqli_error($db));
                     }
                 } else {
-                    return 'Error: ' . mysqli_error($db);
+                    die("Error: " . mysqli_error($db));
                 }
             }
         } else {
@@ -78,6 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         `tanks` = '$tanks',
         `sum_of_closing` = '$sum_of_closing',
         `nozzel` = '$nozzel',
+        `is_totalizer_data` = '$is_totalizer_data',
+
         `total_sales` = '$total_sales',
         `total_recipt` = '$total_receipts',
         `book_value` = '$book_stock',
@@ -109,15 +112,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE `id` = '$id';";
 
                     if (!mysqli_query($db, $update_dips)) {
-                        $output = 'Error: ' . mysqli_error($db);
+                       die("Error: " . mysqli_error($db));
                     }
                 } else {
-                    $output = 'Error: ' . mysqli_error($db);
+                   die("Error: " . mysqli_error($db));
                 }
             }
 
             // Handle totalizer data
-            // new_totalizer($is_totalizer_data, $db, $dealer_id, $date, $user_id, $last_date, $task_id, $recon_id);
+            new_totalizer($is_totalizer_data, $db, $dealer_id, $date, $user_id, $task_id, $recon_id);
         }
 
         // Insert tanks data
@@ -140,10 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                         WHERE `id` = '$tank_id';";
 
                     if (!mysqli_query($db, $update_dips)) {
-                        $output = 'Error: ' . mysqli_error($db);
+                       die("Error: " . mysqli_error($db));
                     }
                 } else {
-                    $output = 'Error: ' . mysqli_error($db);
+                   die("Error: " . mysqli_error($db));
                 }
             }
         }
@@ -164,14 +167,37 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             '$user_id');";
 
         mysqli_query($db, $logs);
+        if (!mysqli_query($db, $logs)) {
+            die("Error: 168" . mysqli_error($db));
+         }
 
         $output = 1; // Success
     } else {
-        $output = 'Error: ' . mysqli_error($db);
+       die("Error: " . mysqli_error($db));
     }
+    logSystemActivity($db, $user_id, 'Updated Dealer Last recon', 'dealer_stock_recon_new', $recon_id);
 
 
     echo $output;
-}
+    // ✅ System Activity logs (for auditing)
 
+}
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '') {
+    $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+                                 VALUES (?, NOW(), ?, ?, ?, ?, ?)");
+    if ($stmt) {
+        mysqli_stmt_bind_param($stmt, "ississ", 
+            $user_id,
+            $action,
+            $resource,
+            $resource_id,
+            $old_value,
+            $new_value
+        );
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_close($stmt);
+    } else {
+        die("Error: " . mysqli_error($db));
+    }
+}
 ?>

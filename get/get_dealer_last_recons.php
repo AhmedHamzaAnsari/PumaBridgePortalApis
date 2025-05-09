@@ -26,7 +26,7 @@ if ($dealer_id === '') {
 $dealer_id = intval($dealer_id);
 
 // Query to get the latest task for the dealer
-$sql_query1 = "SELECT * FROM inspector_task WHERE dealer_id = $dealer_id and stock_recon=1 ORDER BY id DESC LIMIT 1;";
+$sql_query1 = "SELECT * FROM inspector_task WHERE dealer_id = $dealer_id and stock_variations_status=1 ORDER BY id DESC LIMIT 1;";
 $result1 = $db->query($sql_query1);
 
 if (!$result1) {

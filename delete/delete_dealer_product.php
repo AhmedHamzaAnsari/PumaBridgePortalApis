@@ -7,16 +7,19 @@ $access_key = '03201232927';
 
 $pass = $_GET["key"];
 $id=$_GET['id'];
+$user_id=$_GET['user_id'];
 if ($pass != '') {
     if ($pass == $access_key) {
         $id = $_GET['id'];
 
-        $sql = "DELETE FROM `containers_sizes` WHERE id='$id'";
+        $sql = "DELETE FROM `dealers_products` WHERE id='$id'";
 
         // echo $sql;
 
         if(mysqli_query($db, $sql)){
-            logSystemActivity($db, $user_id, $stat,'Delete Container', 'containers_sizes', $id);
+            logSystemActivity($db, $user_id, 'Deleted dealer product', 'dealers_products', $id);
+            echo 1;
+
         }
         else{
             echo 'Error' . mysqli_error($db) . '<br>' . $query;
@@ -30,6 +33,7 @@ if ($pass != '') {
 } else {
     echo 'Key is Required';
 }
+// func\
 function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '')
 {
     $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
@@ -51,5 +55,6 @@ function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old
         echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
+
 
 ?>

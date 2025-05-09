@@ -1,36 +1,30 @@
 <?php
-//fetch.php  
 include("../config.php");
+session_start();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $checkboxValue = isset($_POST['checkboxValue']) ? (int)$_POST['checkboxValue'] : 0;
+    $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    $user_id = $_POST['user_id'];
 
 
-$access_key = '03201232927';
+    if ($id > 0) {
+        $query = "UPDATE dealers_nozzel SET status = $checkboxValue WHERE id = $id";
+        $result = mysqli_query($db, $query);
+        // echo $query;
+        // exit;
+        if ($result) {
+            logSystemActivity($db, $user_id, 'UPDATED dealer Nozzel status', 'dealers_nozzel', $id, '', $checkboxValue);
 
-$pass = $_GET["key"];
-$id=$_GET['id'];
-$user_id = $_SESSION['user_id']; // Ensure session contains user_id
-
-if ($pass != '') {
-    if ($pass == $access_key) {
-        $id = $_GET['id'];
-
-        $sql = "DELETE FROM `eng_users_dealers` WHERE id='$id'";
-
-        // echo $sql;
-
-        if(mysqli_query($db, $sql)){
-            logSystemActivity($db, $$user_id['user_id'], 'Deleted Eng', 'eng_users_dealers', $id);
+            echo 1;
+        } else {
+            echo 0; // update failed
         }
-        else{
-            echo 'Error' . mysqli_error($db) . '<br>' . $query;
-        }
-      
-
     } else {
-        echo 'Wrong Key...';
+        echo 0; // invalid ID
     }
-
 } else {
-    echo 'Key is Required';
+    echo 0; // invalid method
 }
 function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '') {
     $stmt = mysqli_prepare($db, "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
@@ -50,5 +44,3 @@ function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old
         echo "Error preparing system log statement: " . mysqli_error($db);
     }
 }
-
-?>

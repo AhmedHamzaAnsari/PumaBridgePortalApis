@@ -33,6 +33,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Call the recon_sales_update function to update the sales info
             recon_sales_update($last_task_id, $recon_product_id, $dealer_id, $db);
+
+            // Log system activity for nozzle update
+            logSystemActivity($db, $user_id, 'Updated Nozel Reading', 'dealer_reconcilation', $dealer_id, $nozel_last_recon, $nozel_new_reading);
         } else {
             $output = 'Error in log insertion: ' . mysqli_error($db);
         }
@@ -69,6 +72,17 @@ function recon_sales_update($task_id, $product_id, $dealer_id, $db) {
         }
     } else {
         echo 'Error in calculating sales: ' . mysqli_error($db);
+    }
+}
+
+// Function to log system activity
+function logSystemActivity($db, $user_id, $action, $resource, $resource_id, $old_value = '', $new_value = '') {
+    $date = date('Y-m-d H:i:s');
+    $query = "INSERT INTO system_logs (user_id, timestamp, action, resource, resource_id, old_value, new_value) 
+              VALUES ('$user_id', '$date', '$action', '$resource', '$resource_id', '$old_value', '$new_value')";
+
+    if (!mysqli_query($db, $query)) {
+        echo "Error inserting system log: " . mysqli_error($db);
     }
 }
 ?>
